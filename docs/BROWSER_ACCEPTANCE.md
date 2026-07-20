@@ -10,6 +10,13 @@
 - Human owner: product owner
 - Overall status: pending
 
+### Agent rerun after BE-002
+
+- Non-destructive live-server Chromium subset: 5/5 passed (tracking privacy, owner/scanner resolution, role destinations/redirects, mobile public accessibility/localization, and mobile login/scanner layout).
+- Destructive public-request scenario: intentionally excluded to preserve the product owner's active demo data; previously passed in the isolated 6/6 suite.
+- Browserbase: unavailable in the current environment; not simulated.
+- Human acceptance remains required for the scenarios below.
+
 Do not use real customer, identity, payment, or evidence data in this run. Record each result as `pass`, `fail`, or `blocked`; include route, role, browser/device, action, expected result, actual result, and screenshot when useful.
 
 ## Required scenarios

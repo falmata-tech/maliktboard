@@ -1,7 +1,7 @@
 ---
 id: BE-002
 title: Enforce authorization inside application services
-status: accepted
+status: human-acceptance
 owner: product-owner
 risk: tier-3
 source: BE-001 security inspection finding 2026-07-20; docs/ARCHITECTURE.md
@@ -55,12 +55,12 @@ Protected application services must validate permission from the server-resolved
 
 | Criterion | Test level | Evidence |
 |---|---|---|
-| AC-01 | direct service integration and adapter regression | pending |
-| AC-02 | service/API/browser privacy | pending |
+| AC-01 | direct service integration and adapter regression | passing: insufficient role, fabricated role, platform-admin impersonation, unchanged state/audit, and full workflow regression tests |
+| AC-02 | service/API/browser privacy | passing: tenant, Team scope, Viewer-sensitive, privileged-sensitive, invalid token, private evidence, and live-browser privacy scenarios |
 
 ## Approval
 
 - Product acceptance: explicitly approved by product owner on 2026-07-20 after plain-language scope explanation
-- Architecture/security acceptance: defense-in-depth design follows ADR-001 and `docs/ARCHITECTURE.md`; existing role matrix remains authoritative
-- Deployment acceptance: no schema migration; gated by direct-service negative tests, full regression suite, and human browser acceptance
+- Architecture/security acceptance: automated gates pass; authoritative membership/location resolution and centralized evidence authorization verified
+- Deployment acceptance: no schema migration; automated deployment gates pass, production rollout and human browser acceptance remain pending
 - Waivers: none

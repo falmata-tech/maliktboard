@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
-import { getDb } from "@/lib/db";
-import { sha256 } from "@/lib/crypto";
 import { readUpload } from "@/lib/files";
-export async function GET(request:Request,{params}:{params:Promise<{id:string}>}){const {id}=await params;const db=getDb();const evidence=db.prepare(`SELECT ef.*,s.company_id,s.current_location_id,s.origin_location_id,s.destination_location_id FROM evidence_files ef JOIN shipments s ON s.id=ef.shipment_id WHERE ef.id=?`).get(id) as any;if(!evidence)return NextResponse.json({error:"Evidence not found."},{status:404});let allowed=false;const tracking=new URL(request.url).searchParams.get("tracking");if(tracking&&!evidence.sensitive&&evidence.customer_visible){const token=db.prepare(`SELECT 1 FROM access_tokens WHERE token_hash=? AND entity_type='TRACKING' AND entity_id=? AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at>?)`).get(sha256(tracking),evidence.shipment_id,new Date().toISOString());allowed=Boolean(token);}if(!allowed){const user=await currentUser();if(user){const membership=db.prepare(`SELECT role FROM company_members WHERE user_id=? AND company_id=? AND active=1`).get(user.id,evidence.company_id) as any;if(membership){const sensitiveAllowed=!evidence.sensitive||["OWNER","ADMIN","SUPERVISOR"].includes(membership.role);let scopeAllowed=true;if(membership.role==="TEAM_MEMBER"){const scoped=db.prepare(`SELECT 1 FROM company_members m JOIN member_locations ml ON ml.member_id=m.id WHERE m.user_id=? AND m.company_id=? AND ml.location_id IN (?,?,?) LIMIT 1`).get(user.id,evidence.company_id,evidence.current_location_id,evidence.origin_location_id,evidence.destination_location_id);scopeAllowed=Boolean(scoped);}allowed=sensitiveAllowed&&scopeAllowed;}}}if(!allowed)return NextResponse.json({error:"You are not authorized to view this evidence."},{status:403});try{const buffer=await readUpload(evidence.storage_path);return new NextResponse(new Uint8Array(buffer),{headers:{"Content-Type":evidence.mime_type,"Content-Disposition":`inline; filename*=UTF-8''${encodeURIComponent(evidence.original_name)}`,"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"}});}catch{return NextResponse.json({error:"Evidence file is missing."},{status:404});}}
+import { getEvidenceForTracking, getEvidenceForUser } from "@/lib/services";
+
+export async function GET(request:Request,{params}:{params:Promise<{id:string}>}){
+  const {id}=await params;
+  const tracking=new URL(request.url).searchParams.get("tracking");
+  let evidence=tracking?getEvidenceForTracking(tracking,id):null;
+  if(!evidence){const user=await currentUser();if(user)evidence=getEvidenceForUser(user.id,id);}
+  if(!evidence)return NextResponse.json({error:"Evidence not found or access is not authorized."},{status:404});
+  try{
+    const buffer=await readUpload(evidence.storage_path);
+    return new NextResponse(new Uint8Array(buffer),{headers:{"Content-Type":evidence.mime_type,"Content-Disposition":`inline; filename*=UTF-8''${encodeURIComponent(evidence.original_name)}`,"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"}});
+  }catch{return NextResponse.json({error:"Evidence file is missing."},{status:404});}
+}

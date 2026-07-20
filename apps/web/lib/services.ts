@@ -4,7 +4,9 @@ import {
   assertShipmentTransition,
   blockedBatchShipmentStates,
   findBestRoute,
+  hasPermission,
   type BatchState,
+  type Permission,
   type RequestState,
   type ShipmentState,
 } from "@maliktboard/domain";
@@ -28,6 +30,44 @@ function sanitizeText(value: FormDataEntryValue | null, max = 500): string {
 function required(value: string, label: string): string {
   if (!value) throw new Error(`${label} is required.`);
   return value;
+}
+
+function authorizeMember(ctx: MemberContext, permission: Permission): MemberContext {
+  const db = getDb();
+  const membership = db.prepare(`SELECT m.role,c.name company_name,c.handle company_handle,c.status company_status
+    FROM company_members m
+    JOIN companies c ON c.id=m.company_id
+    JOIN users u ON u.id=m.user_id
+    WHERE m.id=? AND m.user_id=? AND m.company_id=? AND m.active=1 AND u.active=1 AND c.status='ACTIVE'`)
+    .get(ctx.memberId, ctx.user.id, ctx.companyId) as any;
+  if (!membership || membership.role !== ctx.role || !hasPermission(membership.role, permission)) {
+    throw new Error("You do not have permission to perform this action or your authorization context is no longer valid.");
+  }
+  const locations = db.prepare(`SELECT location_id FROM member_locations WHERE company_id=? AND member_id=?`)
+    .all(ctx.companyId, ctx.memberId) as Array<{location_id:string}>;
+  return {
+    ...ctx,
+    companyName: membership.company_name,
+    companyHandle: membership.company_handle,
+    companyStatus: membership.company_status,
+    role: membership.role,
+    locationIds: locations.map((row) => row.location_id),
+  };
+}
+
+function authorizedRead(ctx: MemberContext): MemberContext | null {
+  try { return authorizeMember(ctx, "READ_ONLY"); }
+  catch { return null; }
+}
+
+function authorizePlatformAdmin(userId: string): void {
+  const admin = getDb().prepare(`SELECT 1 FROM users WHERE id=? AND active=1 AND platform_role='ADMIN'`).get(userId);
+  if (!admin) throw new Error("You do not have permission to perform this platform action.");
+}
+
+function authorizeActiveUser(userId: string): void {
+  const user = getDb().prepare(`SELECT 1 FROM users WHERE id=? AND active=1`).get(userId);
+  if (!user) throw new Error("Your authorization context is no longer valid.");
 }
 
 function insertToken(db: DB, companyId: string, entityType: string, entityId: string, raw: string, expiresAt: string | null = null): void {
@@ -97,7 +137,8 @@ function emailBodyHtml(value: string): string {
   return escaped.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">Open secure link</a>');
 }
 
-export function listCompaniesForAdmin(): any[] {
+export function listCompaniesForAdmin(adminUserId: string): any[] {
+  authorizePlatformAdmin(adminUserId);
   return getDb().prepare(`SELECT c.*,b.primary_color,b.hero_style,ct.model contract_model,ct.amount contract_amount,ct.currency contract_currency,
     (SELECT COUNT(*) FROM shipments s WHERE s.company_id=c.id) shipment_count,
     (SELECT COUNT(*) FROM company_members m WHERE m.company_id=c.id AND m.active=1) member_count
@@ -168,6 +209,7 @@ export function getQuoteAccess(rawToken: string): any | null {
 }
 
 export async function issueQuote(ctx: MemberContext, requestId: string, amount: number, expectedDeliveryDate?: string, notes?: string): Promise<void> {
+  ctx = authorizeMember(ctx, "QUOTE_ISSUE");
   if (!Number.isFinite(amount) || amount < 0) throw new Error("Enter a valid quote amount.");
   const db = getDb();
   const tx = db.transaction(() => {
@@ -233,6 +275,7 @@ export async function customerQuoteDecision(rawToken: string, decision: "ACCEPT"
 }
 
 export async function activateShipment(ctx: MemberContext, requestId: string): Promise<{shipmentId:string;trackingToken:string;ownerToken:string}> {
+  ctx = authorizeMember(ctx, "SHIPMENT_ACTIVATE");
   const db = getDb();
   let result!: {shipmentId:string;trackingToken:string;ownerToken:string};
   const tx = db.transaction(() => {
@@ -285,6 +328,7 @@ export async function activateShipment(ctx: MemberContext, requestId: string): P
 }
 
 export function getWorkspaceSnapshot(ctx: MemberContext): any {
+  ctx = authorizeMember(ctx, "READ_ONLY");
   const db = getDb();
   const branding = db.prepare(`SELECT c.*,b.* FROM companies c JOIN company_branding b ON b.company_id=c.id WHERE c.id=?`).get(ctx.companyId) as any;
   const scoped = ctx.role === "TEAM_MEMBER" && ctx.locationIds.length > 0;
@@ -310,6 +354,7 @@ export function getWorkspaceSnapshot(ctx: MemberContext): any {
 }
 
 export function getShipmentForMember(ctx: MemberContext, shipmentId: string): any | null {
+  const authorized = authorizedRead(ctx); if (!authorized) return null; ctx = authorized;
   const db=getDb();
   const shipment=db.prepare(`SELECT s.*,o.name origin_location_name,d.name destination_location_name,cl.name current_location_name,c.name company_name,c.handle company_handle FROM shipments s JOIN companies c ON c.id=s.company_id LEFT JOIN locations o ON o.id=s.origin_location_id LEFT JOIN locations d ON d.id=s.destination_location_id LEFT JOIN locations cl ON cl.id=s.current_location_id WHERE s.id=? AND s.company_id=?`).get(shipmentId,ctx.companyId) as any;
   if(!shipment) return null;
@@ -325,6 +370,7 @@ export function getShipmentForMember(ctx: MemberContext, shipmentId: string): an
 }
 
 export function getBatchForMember(ctx: MemberContext,batchId:string):any|null{
+  const authorized = authorizedRead(ctx); if (!authorized) return null; ctx = authorized;
   const db=getDb();
   const batch=db.prepare(`SELECT b.*,rl.name route_name,rl.origin_location_id,rl.destination_location_id,o.name origin_name,d.name destination_name FROM dispatch_batches b JOIN route_legs rl ON rl.id=b.route_leg_id JOIN locations o ON o.id=rl.origin_location_id JOIN locations d ON d.id=rl.destination_location_id WHERE b.id=? AND b.company_id=?`).get(batchId,ctx.companyId) as any;
   if(!batch)return null;
@@ -338,6 +384,7 @@ export function getBatchForMember(ctx: MemberContext,batchId:string):any|null{
 }
 
 export function receiveShipment(ctx: MemberContext, shipmentId: string, idempotencyKey: string): void {
+  ctx = authorizeMember(ctx, "SHIPMENT_UPDATE");
   const db=getDb();
   const tx=db.transaction(()=>{
     const shipment=db.prepare(`SELECT * FROM shipments WHERE id=? AND company_id=?`).get(shipmentId,ctx.companyId) as any;
@@ -377,6 +424,7 @@ export function receiveShipment(ctx: MemberContext, shipmentId: string, idempote
 }
 
 export function createBatch(ctx: MemberContext, routeLegId: string, expectedDeparture?:string, expectedArrival?:string): string {
+  ctx = authorizeMember(ctx, "BATCH_CREATE");
   const db=getDb();
   const leg=db.prepare(`SELECT * FROM route_legs WHERE id=? AND company_id=? AND active=1`).get(routeLegId,ctx.companyId) as any;
   if(!leg)throw new Error("Active Route Leg not found.");
@@ -395,6 +443,7 @@ export function createBatch(ctx: MemberContext, routeLegId: string, expectedDepa
 }
 
 export function addShipmentToBatch(ctx:MemberContext,shipmentId:string,batchId:string,idempotencyKey:string):void{
+  ctx = authorizeMember(ctx, "BATCH_UPDATE");
   const db=getDb();
   const tx=db.transaction(()=>{
     const batch=db.prepare(`SELECT b.*,rl.origin_location_id,rl.destination_location_id FROM dispatch_batches b JOIN route_legs rl ON rl.id=b.route_leg_id WHERE b.id=? AND b.company_id=?`).get(batchId,ctx.companyId) as any;
@@ -414,6 +463,7 @@ export function addShipmentToBatch(ctx:MemberContext,shipmentId:string,batchId:s
 }
 
 export function removeShipmentFromBatch(ctx:MemberContext,shipmentId:string,batchId:string,reason:string):void{
+  ctx = authorizeMember(ctx, "BATCH_UPDATE");
   const db=getDb();
   const tx=db.transaction(()=>{
     const batch=db.prepare(`SELECT b.*,rl.origin_location_id FROM dispatch_batches b JOIN route_legs rl ON rl.id=b.route_leg_id WHERE b.id=? AND b.company_id=?`).get(batchId,ctx.companyId) as any;
@@ -430,6 +480,7 @@ export function removeShipmentFromBatch(ctx:MemberContext,shipmentId:string,batc
 }
 
 export function transitionBatch(ctx:MemberContext,batchId:string,next:BatchState,reason?:string,idempotencyKey?:string):{updated:number;skipped:number}{
+  ctx = authorizeMember(ctx, "BATCH_UPDATE");
   const db=getDb();let summary={updated:0,skipped:0};
   const tx=db.transaction(()=>{
     const batch=db.prepare(`SELECT b.*,rl.origin_location_id,rl.destination_location_id,rl.departure_label,rl.arrival_label,o.name origin_name,d.name destination_name FROM dispatch_batches b JOIN route_legs rl ON rl.id=b.route_leg_id JOIN locations o ON o.id=rl.origin_location_id JOIN locations d ON d.id=rl.destination_location_id WHERE b.id=? AND b.company_id=?`).get(batchId,ctx.companyId) as any;
@@ -475,6 +526,7 @@ export function transitionBatch(ctx:MemberContext,batchId:string,next:BatchState
 }
 
 export function transferShipment(ctx:MemberContext,shipmentId:string,destinationBatchId:string,idempotencyKey:string):void{
+  ctx = authorizeMember(ctx, "BATCH_UPDATE");
   const db=getDb();
   const tx=db.transaction(()=>{
     const shipment=db.prepare(`SELECT * FROM shipments WHERE id=? AND company_id=?`).get(shipmentId,ctx.companyId) as any;
@@ -496,6 +548,7 @@ export function transferShipment(ctx:MemberContext,shipmentId:string,destination
 }
 
 export function startFinalDelivery(ctx:MemberContext,shipmentId:string):void{
+  ctx = authorizeMember(ctx, "SHIPMENT_UPDATE");
   const db=getDb();
   const tx=db.transaction(()=>{
     const shipment=db.prepare(`SELECT * FROM shipments WHERE id=? AND company_id=?`).get(shipmentId,ctx.companyId) as any;
@@ -512,6 +565,7 @@ export function startFinalDelivery(ctx:MemberContext,shipmentId:string):void{
 }
 
 export async function completeDelivery(ctx:MemberContext,shipmentId:string,pin:string,receiverName:string,proofFile:File,receiverIdFile?:File|null):Promise<void>{
+  ctx = authorizeMember(ctx, "SHIPMENT_UPDATE");
   if(!/^\d{6}$/.test(pin))throw new Error("Enter the six-digit Delivery PIN.");
   if(!(proofFile instanceof File)||proofFile.size===0)throw new Error("A proof-of-delivery photo is required.");
   const db=getDb();
@@ -560,6 +614,7 @@ export async function completeDelivery(ctx:MemberContext,shipmentId:string,pin:s
 }
 
 export function recordPayment(ctx:MemberContext,shipmentId:string,amount:number,method:string,reference?:string,notes?:string):void{
+  ctx = authorizeMember(ctx, "PAYMENT_MANAGE");
   if(!Number.isFinite(amount)||amount<=0)throw new Error("Enter a valid payment amount.");
   const db=getDb();
   const tx=db.transaction(()=>{
@@ -598,18 +653,21 @@ export function ownerAccess(rawToken:string):any|null{
 }
 
 export function customerPortal(userId:string):any{
+  authorizeActiveUser(userId);
   const db=getDb();
   const shipments=db.prepare(`SELECT DISTINCT s.*,c.name company_name,c.handle company_handle,cu.user_id owner_user_id,at.token_cipher tracking_cipher,oa.token_cipher owner_cipher FROM shipments s JOIN companies c ON c.id=s.company_id LEFT JOIN customers cu ON cu.id=s.owner_customer_id LEFT JOIN access_tokens at ON at.entity_id=s.id AND at.entity_type='TRACKING' AND at.revoked_at IS NULL LEFT JOIN access_tokens oa ON oa.entity_id=s.id AND oa.entity_type='OWNER_ACCESS' AND oa.revoked_at IS NULL WHERE cu.user_id=? OR EXISTS (SELECT 1 FROM users u WHERE u.id=? AND (u.phone=s.sender_phone OR u.phone=s.receiver_phone)) ORDER BY s.created_at DESC`).all(userId,userId) as any[];
   return shipments.map((s)=>({...s,trackingToken:s.tracking_cipher?decryptSecret(s.tracking_cipher):null,ownerToken:s.owner_user_id===userId&&s.owner_cipher?decryptSecret(s.owner_cipher):null,tracking_cipher:undefined,owner_cipher:undefined}));
 }
 
 export function resolveQr(ctx:MemberContext,raw:string):{type:"SHIPMENT"|"BATCH";id:string;label:string}|null{
+  const authorized = authorizedRead(ctx); if (!authorized) return null; ctx = authorized;
   const row=getDb().prepare(`SELECT at.entity_type,at.entity_id,CASE WHEN at.entity_type='QR_SHIPMENT' THEN (SELECT tracking_number FROM shipments WHERE id=at.entity_id) ELSE (SELECT batch_number FROM dispatch_batches WHERE id=at.entity_id) END label FROM access_tokens at WHERE at.company_id=? AND at.token_hash=? AND at.entity_type IN ('QR_SHIPMENT','QR_BATCH') AND at.revoked_at IS NULL`).get(ctx.companyId,sha256(raw)) as any;
   if(!row)return null;
   return {type:row.entity_type==="QR_SHIPMENT"?"SHIPMENT":"BATCH",id:row.entity_id,label:row.label};
 }
 
 export function getLabelData(ctx:MemberContext,type:"shipment"|"batch",entityId:string):any{
+  ctx = authorizeMember(ctx, "READ_ONLY");
   const db=getDb();
   if(type==="shipment"){
     const row=db.prepare(`SELECT s.*,c.name company_name,b.logo_mark,at.token_cipher qr_cipher,o.code origin_code,d.code destination_code,js.destination_label next_destination,rl.code next_route_code FROM shipments s JOIN companies c ON c.id=s.company_id JOIN company_branding b ON b.company_id=c.id JOIN access_tokens at ON at.entity_id=s.id AND at.entity_type='QR_SHIPMENT' AND at.revoked_at IS NULL LEFT JOIN locations o ON o.id=s.origin_location_id LEFT JOIN locations d ON d.id=s.destination_location_id LEFT JOIN journey_steps js ON js.shipment_id=s.id AND js.sequence=s.current_step_index+1 LEFT JOIN route_legs rl ON rl.id=js.route_leg_id WHERE s.id=? AND s.company_id=?`).get(entityId,ctx.companyId) as any;
@@ -625,6 +683,7 @@ export function getLabelData(ctx:MemberContext,type:"shipment"|"batch",entityId:
 }
 
 export function createLocation(ctx:MemberContext,input:{name:string;code:string;city:string;area:string;phone?:string;capabilities:string[]}):string{
+  ctx = authorizeMember(ctx, "NETWORK_MANAGE");
   const db=getDb();const locationId=id("loc");
   db.prepare(`INSERT INTO locations (id,company_id,name,code,city,area,phone,capabilities_json,active,public_visible,created_at) VALUES (?,?,?,?,?,?,?,?,1,1,?)`)
     .run(locationId,ctx.companyId,required(input.name.trim(),"Location name"),required(input.code.trim().toUpperCase(),"Location code"),required(input.city.trim(),"City"),required(input.area.trim(),"Area or landmark"),input.phone?.trim()||null,JSON.stringify(input.capabilities),now());
@@ -633,6 +692,7 @@ export function createLocation(ctx:MemberContext,input:{name:string;code:string;
 }
 
 export function createRouteLeg(ctx:MemberContext,input:{name:string;code:string;originLocationId:string;destinationLocationId:string;estimatedHours:number;priority:number}):string{
+  ctx = authorizeMember(ctx, "NETWORK_MANAGE");
   if(input.originLocationId===input.destinationLocationId)throw new Error("Origin and destination must be different.");
   const db=getDb();const routeId=id("leg");
   db.prepare(`INSERT INTO route_legs (id,company_id,name,code,origin_location_id,destination_location_id,estimated_hours,priority,departure_label,arrival_label,active,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,1,?)`)
@@ -642,6 +702,7 @@ export function createRouteLeg(ctx:MemberContext,input:{name:string;code:string;
 }
 
 export function createTeamMember(ctx:MemberContext,input:{name:string;email:string;phone?:string;password:string;role:string;locationIds:string[]}):string{
+  ctx = authorizeMember(ctx, "TEAM_MANAGE");
   if(input.password.length<10)throw new Error("Temporary password must contain at least 10 characters.");
   const db=getDb();const userId=id("usr");const memberId=id("mem");
   const role=["ADMIN","SUPERVISOR","TEAM_MEMBER","VIEWER"].includes(input.role)?input.role:"TEAM_MEMBER";
@@ -656,6 +717,7 @@ export function createTeamMember(ctx:MemberContext,input:{name:string;email:stri
 }
 
 export function updateBranding(ctx:MemberContext,input:{tagline:string;story:string;phone:string;email?:string;primary:string;secondary:string;accent:string;heroStyle:string}):void{
+  ctx = authorizeMember(ctx, "COMPANY_MANAGE");
   const db=getDb();
   const before=db.prepare(`SELECT c.tagline,c.story,c.phone,c.email,b.* FROM companies c JOIN company_branding b ON b.company_id=c.id WHERE c.id=?`).get(ctx.companyId);
   const tx=db.transaction(()=>{
@@ -666,6 +728,7 @@ export function updateBranding(ctx:MemberContext,input:{tagline:string;story:str
 }
 
 export function createCompanyByAdmin(adminUserId:string,input:{name:string;handle:string;phone:string;email?:string;ownerName:string;ownerEmail:string;ownerPhone?:string;temporaryPassword:string}):string{
+  authorizePlatformAdmin(adminUserId);
   if(input.temporaryPassword.length<10)throw new Error("Temporary owner password must contain at least 10 characters.");
   const db=getDb();const companyId=id("cmp");const userId=id("usr");const memberId=id("mem");const created=now();
   const handle=input.handle.trim().toLowerCase().replace(/[^a-z0-9-]/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"");
@@ -684,6 +747,7 @@ export function createCompanyByAdmin(adminUserId:string,input:{name:string;handl
 }
 
 export function setCompanyStatus(adminUserId:string,companyId:string,status:"ACTIVE"|"SUSPENDED",reason:string):void{
+  authorizePlatformAdmin(adminUserId);
   const db=getDb();const before=db.prepare(`SELECT status FROM companies WHERE id=?`).get(companyId) as any;if(!before)throw new Error("Company not found.");
   db.prepare(`UPDATE companies SET status=? WHERE id=?`).run(status,companyId);
   db.prepare(`INSERT INTO audit_logs (id,company_id,actor_user_id,action,entity_type,entity_id,reason,before_json,after_json,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)`)
@@ -691,9 +755,44 @@ export function setCompanyStatus(adminUserId:string,companyId:string,status:"ACT
 }
 
 export function getEvidenceForRequest(ctx:MemberContext,requestId:string):any|null{
-  return getDb().prepare(`SELECT photo_path FROM shipment_requests WHERE id=? AND company_id=?`).get(requestId,ctx.companyId) as any;
+  const authorized = authorizedRead(ctx);
+  if (!authorized || !["OWNER","ADMIN","SUPERVISOR","VIEWER"].includes(authorized.role)) return null;
+  return getDb().prepare(`SELECT photo_path FROM shipment_requests WHERE id=? AND company_id=?`).get(requestId,authorized.companyId) as any;
 }
 
-export function getEvidenceRecord(evidenceId:string):any|null{
-  return getDb().prepare(`SELECT * FROM evidence_files WHERE id=?`).get(evidenceId) as any;
+export function getEvidenceForMember(ctx:MemberContext,evidenceId:string):any|null{
+  const authorized = authorizedRead(ctx); if (!authorized) return null;
+  const row=getDb().prepare(`SELECT ef.*,s.current_location_id,s.origin_location_id,s.destination_location_id
+    FROM evidence_files ef JOIN shipments s ON s.id=ef.shipment_id
+    WHERE ef.id=? AND ef.company_id=? AND s.company_id=?`).get(evidenceId,authorized.companyId,authorized.companyId) as any;
+  if(!row)return null;
+  if(row.sensitive&&!hasPermission(authorized.role,"EVIDENCE_VIEW_SENSITIVE"))return null;
+  try{ensureLocationScope(authorized,[row.current_location_id,row.origin_location_id,row.destination_location_id]);}
+  catch{return null;}
+  return row;
+}
+
+export function getEvidenceForUser(userId:string,evidenceId:string):any|null{
+  const db=getDb();
+  const membership=db.prepare(`SELECT u.id user_id,u.name,u.email,u.phone,u.platform_role,u.locale,m.id member_id,m.company_id,m.role,c.name company_name,c.handle company_handle,c.status company_status
+    FROM evidence_files ef
+    JOIN company_members m ON m.company_id=ef.company_id AND m.user_id=? AND m.active=1
+    JOIN companies c ON c.id=m.company_id AND c.status='ACTIVE'
+    JOIN users u ON u.id=m.user_id AND u.active=1
+    WHERE ef.id=?`).get(userId,evidenceId) as any;
+  if(!membership)return null;
+  const locations=db.prepare(`SELECT location_id FROM member_locations WHERE company_id=? AND member_id=?`).all(membership.company_id,membership.member_id) as Array<{location_id:string}>;
+  return getEvidenceForMember({
+    user:{id:membership.user_id,name:membership.name,email:membership.email,phone:membership.phone,platformRole:membership.platform_role,locale:membership.locale},
+    memberId:membership.member_id,companyId:membership.company_id,companyName:membership.company_name,companyHandle:membership.company_handle,
+    companyStatus:membership.company_status,role:membership.role,locationIds:locations.map((row)=>row.location_id),
+  },evidenceId);
+}
+
+export function getEvidenceForTracking(rawToken:string,evidenceId:string):any|null{
+  return getDb().prepare(`SELECT ef.* FROM evidence_files ef
+    JOIN access_tokens at ON at.company_id=ef.company_id AND at.entity_id=ef.shipment_id AND at.entity_type='TRACKING'
+    WHERE ef.id=? AND ef.customer_visible=1 AND ef.sensitive=0 AND at.token_hash=?
+      AND at.revoked_at IS NULL AND (at.expires_at IS NULL OR at.expires_at>?)`)
+    .get(evidenceId,sha256(rawToken),now()) as any || null;
 }

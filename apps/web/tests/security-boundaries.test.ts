@@ -44,6 +44,11 @@ test("authorization and tenant security boundaries", async (t) => {
     companyName: "Blue Nile Delivery", handle: "bluenile", role: "TEAM_MEMBER",
     locations: ["loc_hawassa"],
   });
+  const blueViewer = actor({
+    userId: "usr_viewer", memberId: "mem_viewer", companyId: "cmp_blue",
+    companyName: "Blue Nile Delivery", handle: "bluenile", role: "VIEWER",
+    locations: ["loc_addis"],
+  });
 
   await t.test("foreign tenant identifiers disclose nothing and cannot mutate", () => {
     const before = db.prepare(`SELECT state,version FROM shipments WHERE id='shp_demo'`).get();
@@ -73,6 +78,26 @@ test("authorization and tenant security boundaries", async (t) => {
     assert.equal(hasPermission("TEAM_MEMBER", "QUOTE_ISSUE"), false);
     assert.equal(hasPermission("TEAM_MEMBER", "EVIDENCE_VIEW_SENSITIVE"), false);
     assert.equal(hasPermission("SUPERVISOR", "EVIDENCE_VIEW_SENSITIVE"), true);
+  });
+
+  await t.test("application services reject insufficient and fabricated authority before mutation", () => {
+    const paymentCount = (db.prepare(`SELECT COUNT(*) count FROM payments WHERE shipment_id='shp_demo'`).get() as any).count;
+    const auditCount = (db.prepare(`SELECT COUNT(*) count FROM audit_logs`).get() as any).count;
+    assert.throws(() => services.recordPayment(blueViewer, "shp_demo", 50, "CASH"), /permission/i);
+    assert.throws(() => services.createBatch(hawassaTeam, "leg_addis_hawassa"), /permission/i);
+    assert.throws(() => services.listCompaniesForAdmin("usr_owner"), /permission/i);
+    assert.throws(() => services.setCompanyStatus("usr_owner", "cmp_oromia", "SUSPENDED", "unauthorized"), /permission/i);
+    assert.equal(services.listCompaniesForAdmin("usr_platform").length, 2);
+
+    const fabricatedOwner = { ...blueViewer, role: "OWNER" };
+    assert.throws(() => services.createLocation(fabricatedOwner, {
+      name: "Unauthorized", code: "NOPE", city: "Addis Ababa", area: "Nowhere", capabilities: [],
+    }), /authorization context/i);
+
+    assert.equal((db.prepare(`SELECT COUNT(*) count FROM payments WHERE shipment_id='shp_demo'`).get() as any).count, paymentCount);
+    assert.equal((db.prepare(`SELECT COUNT(*) count FROM locations WHERE code='NOPE'`).get() as any).count, 0);
+    assert.equal((db.prepare(`SELECT COUNT(*) count FROM audit_logs`).get() as any).count, auditCount);
+    assert.equal((db.prepare(`SELECT status FROM companies WHERE id='cmp_oromia'`).get() as any).status, "ACTIVE");
   });
 
   await t.test("QR identifiers are tenant-bound and revoked identifiers fail closed", () => {
@@ -113,6 +138,27 @@ test("authorization and tenant security boundaries", async (t) => {
     assert.deepEqual(result.evidence.map((item: any) => item.id), ["evi_public_test"]);
     assert.equal(JSON.stringify(result).includes("evidence/private.jpg"), false);
     assert.equal(JSON.stringify(result).includes("evidence/id.jpg"), false);
+  });
+
+  await t.test("evidence services enforce tenant, role, scope, and tracking-token visibility", () => {
+    const blueOwner = actor({
+      userId: "usr_owner", memberId: "mem_owner", companyId: "cmp_blue",
+      companyName: "Blue Nile Delivery", handle: "bluenile", role: "OWNER",
+      locations: ["loc_bole", "loc_addis", "loc_hawassa", "loc_hawassa_store"],
+    });
+    const publicRow = services.getEvidenceForMember(blueOwner, "evi_public_test");
+    assert.equal(publicRow?.storage_path, "evidence/public.jpg");
+    assert.equal(services.getEvidenceForMember(oromiaOwner, "evi_public_test"), null);
+    assert.equal(services.getEvidenceForMember(hawassaTeam, "evi_public_test"), null);
+    assert.equal(services.getEvidenceForMember(blueViewer, "evi_sensitive_test"), null);
+    assert.equal(services.getEvidenceForMember(blueOwner, "evi_sensitive_test")?.storage_path, "evidence/id.jpg");
+    assert.equal(services.getEvidenceForUser("usr_owner", "evi_sensitive_test")?.storage_path, "evidence/id.jpg");
+    assert.equal(services.getEvidenceForUser("usr_viewer", "evi_sensitive_test"), null);
+
+    assert.equal(services.getEvidenceForTracking("fresh-tracking-token", "evi_public_test")?.id, "evi_public_test");
+    assert.equal(services.getEvidenceForTracking("fresh-tracking-token", "evi_private_test"), null);
+    assert.equal(services.getEvidenceForTracking("fresh-tracking-token", "evi_sensitive_test"), null);
+    assert.equal(services.getEvidenceForTracking("invalid-tracking-token", "evi_public_test"), null);
   });
 
   fs.rmSync(temp, { recursive: true, force: true });
