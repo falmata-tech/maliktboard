@@ -1,7 +1,9 @@
 # Master Prompt Compliance Baseline
 
-Audit date: 2026-07-20  
-Baseline: `MaliktBoard_Complete_MVP_Master_Build_Prompt.md`  
+Audit date: 2026-07-20
+
+Baseline: `MaliktBoard_Complete_MVP_Master_Build_Prompt.md`
+
 Evidence reviewed: schema, domain package, services/actions, routes/components, tests, scripts, and current documentation.
 
 This is a static compliance audit, not browser acceptance or production certification. `Conforms` means the section's material requirements have direct evidence. `Partial` means useful implementation exists but required behavior or proof is missing. `Nonconforming` means the implementation deliberately or materially contradicts the baseline. `Unverified` means runtime/human evidence is still required.
