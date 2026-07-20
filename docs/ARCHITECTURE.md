@@ -21,7 +21,7 @@ The domain must not import UI, framework, database, storage, or provider code. A
 - SQLite persistence, custom database sessions, local private uploads
 - Resend-compatible notification worker
 
-The master prompt instead mandates Supabase Authentication, PostgreSQL/RLS, Supabase Storage, and Expo/React Native. This is an unresolved architecture decision (`ADR-001`); current code does not redefine the requirement.
+The master prompt instead mandates Supabase Authentication, PostgreSQL/RLS, Supabase Storage, and Expo/React Native. `ADR-001` accepts the current stack only for local validation and a controlled single-node pilot with mandatory migration triggers. It does not redefine implementation compliance with the master prompt.
 
 ## Design rules
 

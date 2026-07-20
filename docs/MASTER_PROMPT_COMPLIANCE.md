@@ -20,7 +20,7 @@ The repository is a substantial functional pilot, not the master-prompt-complete
 | MP-02 | Core product model | Conforms | Schema models company, request, shipment, journey steps, Route Legs, batches, and membership. |
 | MP-03 | Terminology | Conforms | UI/domain consistently use Shipment, Route Leg, Journey Plan/Step, and Dispatch Batch. |
 | MP-04 | MVP boundaries | Partial | Most included workflows exist and prohibited marketplace/driver/fleet/payment/GPS features are absent; several mandatory inclusions remain partial below. |
-| MP-05 | Technology stack | Nonconforming | Uses SQLite/custom auth/local storage/scanner PWA instead of PostgreSQL/Supabase/RLS/Storage/Expo; decision pending in ADR-001. |
+| MP-05 | Technology stack | Nonconforming | Uses SQLite/custom auth/local storage/scanner PWA instead of PostgreSQL/Supabase/RLS/Storage/Expo; ADR-001 permits only a time-bounded controlled-pilot exception. |
 | MP-06 | Documentation before implementation | Partial | Required documents now exist, but were created after implementation; compliance and decision history are being reconstructed. |
 | MP-07 | Multi-tenant security | Nonconforming | Composite company keys and service checks exist; mandated PostgreSQL RLS is absent and isolation coverage is insufficient. |
 | MP-08 | Users and roles | Partial | Platform admin, five company roles, customer/guest flows exist; support impersonation and several granular assignments are absent. |
@@ -69,11 +69,11 @@ The repository is a substantial functional pilot, not the master-prompt-complete
 
 ## Release blockers before feature prioritization
 
-1. Human decision on ADR-001: mandated Supabase/PostgreSQL/Expo architecture versus a time-bounded pilot exception.
-2. Human browser baseline across public, customer, company-role, admin, tracking, label and scanner experiences.
-3. Security-focused tenant/permission/evidence test expansion.
-4. Accepted specs for each repair; do not implement this matrix as one uncontrolled mega-change.
-5. Hosted CI evidence and GitHub branch protection for DEP-001.
+1. Human browser baseline across public, customer, company-role, admin, tracking, label and scanner experiences.
+2. Security-focused tenant/permission/evidence test expansion.
+3. Accepted specs for each repair; do not implement this matrix as one uncontrolled mega-change.
+4. Hosted CI evidence and GitHub branch protection for DEP-001.
+5. Enforce ADR-001 pilot boundaries and migration triggers before broader production.
 
 ## How this matrix changes
 
