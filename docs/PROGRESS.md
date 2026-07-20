@@ -15,6 +15,7 @@ Phase 0: establish spec-driven control before product repair or feature work.
 
 ## In progress
 
+- [ ] Verify authorization and tenant security boundaries (`BE-001`; accepted, test implementation starting)
 - [ ] Verify portable quality CI on GitHub and enable required checks (`DEP-001`; local gate passed)
 - [ ] Codespaces proxy repair awaiting human browser acceptance (`DEP-002`)
 - [ ] Human browser baseline run `BA-2026-07-20-01`
@@ -22,9 +23,10 @@ Phase 0: establish spec-driven control before product repair or feature work.
 
 ## Next, in order
 
+- [ ] Complete `BE-001` negative security verification and record any repair specs
 - [ ] Human browser baseline and defect capture
 - [ ] Prioritized, accepted repair specs
 
 ## Active implementation
 
-None. No product feature or repair is authorized until its spec is accepted.
+`BE-001` is accepted for tests and verification only. No production behavior repair is authorized; findings require separate accepted specs.
