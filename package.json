@@ -12,6 +12,7 @@
     "start": "npm run start -w @maliktboard/web",
     "typecheck": "npm run typecheck -ws --if-present",
     "test": "npm run test -w @maliktboard/domain && npm run test -w @maliktboard/web",
+    "spec:check": "node scripts/check-specs.mjs",
     "seed:reset": "node scripts/reset-demo.mjs",
     "worker:notifications": "node scripts/notification-worker.mjs",
     "setup:production": "node scripts/create-production-env.mjs",
