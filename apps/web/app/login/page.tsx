@@ -1,0 +1,8 @@
+import Link from "next/link";
+import { currentUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { loginAction } from "@/app/actions";
+import { Flash } from "@/components/flash";
+import { env } from "@/lib/env";
+export const dynamic="force-dynamic";
+export default async function LoginPage({searchParams}:{searchParams:Promise<{error?:string;success?:string}>}){const user=await currentUser();if(user)redirect(user.platformRole==="ADMIN"?"/admin":"/app");const {error,success}=await searchParams;return <main className="auth-page"><section className="auth-card"><Link className="logo" style={{padding:0,color:"#172126"}} href="/"><span className="logo-mark">M</span><span>MaliktBoard</span></Link><h1>Sign in</h1><p className="muted">Company staff, customers, and platform administrators use the same secure login.</p><Flash error={error} success={success}/><form action={loginAction} className="stack mt"><div className="field"><label>Email or phone</label><input className="input" name="identifier" autoComplete="username" required/></div><div className="field"><label>Password</label><input className="input" name="password" type="password" autoComplete="current-password" required/></div><button className="btn">Sign in</button></form>{env.seedDemo&&<div className="demo-accounts"><b>Demo accounts</b><br/>Owner: owner@bluenile.local / Owner123!<br/>Supervisor: supervisor@bluenile.local / Supervisor123!<br/>Team member: team@bluenile.local / Team123!<br/>Customer: customer@example.com / Customer123!<br/>Platform admin: admin@maliktboard.local / Admin123!</div>}</section></main>}

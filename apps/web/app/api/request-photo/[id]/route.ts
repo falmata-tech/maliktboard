@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { requireMember } from "@/lib/auth";
+import { getEvidenceForRequest } from "@/lib/services";
+import { readUpload } from "@/lib/files";
+export async function GET(_:Request,{params}:{params:Promise<{id:string}>}){try{const ctx=await requireMember("READ_ONLY");if(!["OWNER","ADMIN","SUPERVISOR","VIEWER"].includes(ctx.role))throw new Error("You are not authorized to view request photographs.");const {id}=await params;const row=getEvidenceForRequest(ctx,id);if(!row?.photo_path)return NextResponse.json({error:"Photo not found."},{status:404});const buffer=await readUpload(row.photo_path);const ext=row.photo_path.split(".").pop()?.toLowerCase();const mime=ext==="png"?"image/png":ext==="webp"?"image/webp":ext==="pdf"?"application/pdf":"image/jpeg";return new NextResponse(new Uint8Array(buffer),{headers:{"Content-Type":mime,"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"}});}catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Unauthorized"},{status:401});}}

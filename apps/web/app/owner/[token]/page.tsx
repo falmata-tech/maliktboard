@@ -1,0 +1,5 @@
+import { notFound } from "next/navigation";
+import { StatusBadge } from "@/components/status-badge";
+import { ownerAccess } from "@/lib/services";
+export const dynamic="force-dynamic";
+export default async function OwnerAccessPage({params}:{params:Promise<{token:string}>}){const {token}=await params;const sh=ownerAccess(token);if(!sh)notFound();return <main className="tracking-shell"><div className="tracking-head" style={{background:`linear-gradient(135deg,${sh.primary_color},#102c32)`}}><div className="eyebrow" style={{color:"#d8eeee"}}>{sh.company_name}</div><h1>Owner delivery authorization</h1><p style={{margin:0}}>{sh.tracking_number}</p></div><section className="card mt"><div className="card-head"><h3>Delivery PIN</h3><StatusBadge value={sh.state}/></div><div className="card-body"><p>Share this PIN only with the intended receiver. The delivery team will request it during the final handoff.</p><div className="owner-pin">{sh.deliveryPin}</div><div className="notice alert mt">Do not post this page publicly. The normal tracking page does not reveal this PIN.</div></div></section></main>}
