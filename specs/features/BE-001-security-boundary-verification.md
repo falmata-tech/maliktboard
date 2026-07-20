@@ -1,7 +1,7 @@
 ---
 id: BE-001
 title: Verify authorization and tenant security boundaries
-status: accepted
+status: verifying
 owner: product-owner
 risk: tier-3
 source: Product-owner instruction 2026-07-20; MP-06, MP-07, MP-13, MP-35, MP-47, MP-49
@@ -90,15 +90,15 @@ Application-service entry points receive authenticated actor and company context
 
 | Criterion | Test level | Evidence |
 |---|---|---|
-| AC-01 | service integration and mutation-negative | pending |
-| AC-02 | domain/service integration and browser authorization | pending |
-| AC-03 | service/API integration | pending |
-| AC-04 | service/API/browser privacy | pending |
-| AC-05 | process/traceability review | pending |
+| AC-01 | service integration and mutation-negative | passing: foreign shipment/request/batch reads denied; receive mutation left state, events, and foreign audit unchanged |
+| AC-02 | domain/service integration and browser authorization | partial: role matrix and Team location scope pass; direct service capability enforcement gap recorded in BE-002 |
+| AC-03 | service/API integration | passing: invalid, expired, revoked, and foreign-tenant QR/tracking-token cases fail closed |
+| AC-04 | service/API/browser privacy | partial: public evidence visibility/sensitivity filters and prior browser privacy pass; unscoped evidence accessor recorded in BE-002 |
+| AC-05 | process/traceability review | passing: BE-002 proposed before any production repair |
 
 ## Approval
 
 - Product acceptance: approved by product owner on 2026-07-20 (“go with your recommended task and orders”)
-- Architecture/security acceptance: accepted scope under ADR-001 and repository operating contract; verification does not approve a discovered repair
+- Architecture/security acceptance: verification finding open in BE-002; BE-001 cannot complete until repaired or explicitly deferred with rationale
 - Deployment acceptance: tests-only CI-gate change; no runtime deployment or migration
 - Waivers: none
