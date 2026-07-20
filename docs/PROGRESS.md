@@ -24,10 +24,10 @@ Phase 0: establish spec-driven control before product repair or feature work.
 ## Next, in order
 
 - [ ] Complete `BE-001` negative security verification and record any repair specs
-- [ ] Clarify and accept or defer service-level authorization repair (`BE-002`; proposed from BE-001 finding)
+- [ ] Implement and verify service-level authorization repair (`BE-002`; accepted 2026-07-20)
 - [ ] Human browser baseline and defect capture
 - [ ] Prioritized, accepted repair specs
 
 ## Active implementation
 
-`BE-001` is accepted for tests and verification only. `BE-002` records the discovered service authorization gap but is not authorized for implementation.
+`BE-002` is accepted for the existing service authorization and evidence-access scope only. No role-matrix or adjacent behavior changes are authorized.

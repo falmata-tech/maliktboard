@@ -1,7 +1,7 @@
 ---
 id: BE-002
 title: Enforce authorization inside application services
-status: proposed
+status: accepted
 owner: product-owner
 risk: tier-3
 source: BE-001 security inspection finding 2026-07-20; docs/ARCHITECTURE.md
@@ -16,7 +16,7 @@ Mutation route handlers request the appropriate permission before calling applic
 
 - In scope: define and enforce required capabilities at every protected service entry point; require actor, tenant, role, and location context for evidence access; keep route checks as defense in depth; add direct-service negative tests and audit assertions.
 - Non-goals: changing the role matrix, adding roles, redesigning authentication, migrating persistence, changing intended UI access, or weakening existing tenant/location checks.
-- Assumptions/open questions: map each service to one existing domain permission before implementation; decide whether read accessors deny with `null` or an authorization error without enabling identifier enumeration.
+- Assumptions/open questions: map each service to one existing domain permission before implementation. Read accessors return `null` for missing, foreign, or unauthorized records where identifier enumeration is possible; mutation services throw the existing generic permission error before protected state access.
 
 ## Behavior
 
@@ -60,7 +60,7 @@ Protected application services must validate permission from the server-resolved
 
 ## Approval
 
-- Product acceptance: pending
-- Architecture/security acceptance: pending
-- Deployment acceptance: pending
+- Product acceptance: explicitly approved by product owner on 2026-07-20 after plain-language scope explanation
+- Architecture/security acceptance: defense-in-depth design follows ADR-001 and `docs/ARCHITECTURE.md`; existing role matrix remains authoritative
+- Deployment acceptance: no schema migration; gated by direct-service negative tests, full regression suite, and human browser acceptance
 - Waivers: none
