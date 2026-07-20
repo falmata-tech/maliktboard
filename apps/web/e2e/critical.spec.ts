@@ -8,6 +8,10 @@ async function login(page: Page, identifier: string, password: string) {
 }
 
 test("public request and tracking Server Actions work in a browser", async ({ page }) => {
+  const encodingWarnings: string[] = [];
+  page.on("console", (message) => {
+    if (/encType|encoding type/i.test(message.text())) encodingWarnings.push(message.text());
+  });
   await page.goto("/c/bluenile");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Every package");
   await page.getByRole("link", { name: /Request a shipment/i }).first().click();
@@ -34,6 +38,7 @@ test("public request and tracking Server Actions work in a browser", async ({ pa
   await page.getByRole("button", { name: "Open tracking" }).click();
   await expect(page).toHaveURL(/\/t\/demo-track-blue-nile$/);
   await expect(page.getByRole("heading", { name: "MB-104829" })).toBeVisible();
+  expect(encodingWarnings).toEqual([]);
 });
 
 test("public tracking keeps authorization secrets private", async ({ page }) => {

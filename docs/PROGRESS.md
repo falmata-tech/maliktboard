@@ -15,7 +15,7 @@ Phase 0: establish spec-driven control before product repair or feature work.
 
 ## In progress
 
-- [ ] Remove redundant Server Action upload encoding attributes (`FE-001`; accepted)
+- [ ] Human acceptance for Server Action upload warning repair (`FE-001`; automated gates and 6/6 isolated browser suite pass)
 - [ ] Human acceptance for authorization and tenant security boundaries (`BE-001`; automated gates pass)
 - [ ] Verify portable quality CI on GitHub and enable required checks (`DEP-001`; local gate passed)
 - [ ] Codespaces proxy repair awaiting human browser acceptance (`DEP-002`)
@@ -31,4 +31,4 @@ Phase 0: establish spec-driven control before product repair or feature work.
 
 ## Active implementation
 
-`FE-001` is accepted for the two redundant upload-form encoding attributes and regression evidence only. `BE-001` and `BE-002` remain at human acceptance.
+None. `FE-001`, `BE-001`, and `BE-002` are at human acceptance; no additional implementation is authorized.

@@ -17,6 +17,13 @@
 - Browserbase: unavailable in the current environment; not simulated.
 - Human acceptance remains required for the scenarios below.
 
+### Agent rerun after FE-001
+
+- Isolated Chromium suite: 6/6 passed against a fresh synthetic database.
+- Public request file upload reached the quote page; React emitted no form-encoding warning.
+- Production build, typecheck, 20/20 unit/integration tests, and spec guard passed.
+- Human focus: submit a synthetic request photo and report any visible error or `Invalid Server Actions request` message.
+
 Do not use real customer, identity, payment, or evidence data in this run. Record each result as `pass`, `fail`, or `blocked`; include route, role, browser/device, action, expected result, actual result, and screenshot when useful.
 
 ## Required scenarios
