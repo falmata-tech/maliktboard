@@ -11,6 +11,7 @@ Phase 0: establish spec-driven control before product repair or feature work.
 - [x] Risk-tiered change control and acceptance gates defined
 - [x] Architecture divergence recorded as proposed ADR-001
 - [x] Human accepted the spec-driven workflow
+- [x] Static master-prompt compliance matrix completed
 
 ## In progress
 
@@ -20,7 +21,6 @@ Phase 0: establish spec-driven control before product repair or feature work.
 ## Next, in order
 
 - [ ] Human browser baseline and defect capture
-- [ ] Master-prompt compliance matrix
 - [ ] Human decision on ADR-001
 - [ ] Prioritized, accepted repair specs
 
