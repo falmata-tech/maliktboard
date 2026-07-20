@@ -22,6 +22,7 @@
 - [ ] Migration, backup, rollback, and deployment rehearsal completed when applicable
 - [ ] Traceability, decisions, progress, and docs updated
 - [ ] Human browser acceptance recorded for visible behavior
+- [ ] Agent local browser suite passed first; Browserbase evidence attached when available/required
 - [ ] Human review confirms the feature is usable, not merely technically functional
 
 A waiver must name the failed gate, risk, owner, expiry/remediation spec, and human approver.

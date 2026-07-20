@@ -1,7 +1,7 @@
 ---
 id: DEP-003
 title: Agent-owned local and remote browser testing
-status: accepted
+status: verifying
 owner: product-owner
 risk: tier-2
 source: Product-owner instruction 2026-07-20
@@ -76,14 +76,14 @@ Use stable role-oriented locators and outcomes rather than implementation select
 
 | Criterion | Test level | Evidence |
 |---|---|---|
-| AC-01 | local browser integration | pending |
-| AC-02 | desktop/mobile browser projects | pending |
+| AC-01 | local browser integration | 6 Chromium scenarios passed locally in 39.1s; traces/screenshots/videos verified on preceding controlled failures |
+| AC-02 | desktop/mobile browser projects | desktop public/auth/privacy/roles/scanner and Pixel 7 responsive/localization checks passed |
 | AC-03 | Browserbase remote integration | blocked: integration unavailable in current session |
-| AC-04 | process review | workflow update pending |
+| AC-04 | process review | agent-first evidence and focused human acceptance recorded in workflow and browser ledger |
 
 ## Approval
 
 - Product acceptance: explicitly approved 2026-07-20
-- Architecture/security acceptance: pending implementation review
+- Architecture/security acceptance: synthetic isolated data, ignored artifacts, serial execution and privacy assertions verified locally
 - Deployment acceptance: local-first approved; hosted/Browserbase evidence pending
 - Waivers: none

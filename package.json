@@ -12,6 +12,7 @@
     "start": "npm run start -w @maliktboard/web",
     "typecheck": "npm run typecheck -ws --if-present",
     "test": "npm run test -w @maliktboard/domain && npm run test -w @maliktboard/web",
+    "test:e2e": "playwright test",
     "spec:check": "node scripts/check-specs.mjs",
     "seed:reset": "node scripts/reset-demo.mjs",
     "worker:notifications": "node scripts/notification-worker.mjs",
@@ -22,6 +23,7 @@
     "node": ">=22.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "postcss": "8.5.20"
   },
   "overrides": {

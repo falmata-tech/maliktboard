@@ -5,7 +5,8 @@
 - Environment: GitHub Codespaces development server, port 3000
 - Forwarded URL: `https://upgraded-guide-6rjxrwg4vv7c4pjr-3000.app.github.dev`
 - Data: seeded demonstration data only
-- Automated evidence: routes/build/tests are recorded separately; they do not satisfy human acceptance
+- Agent evidence: DEP-003 local Chromium suite passed 6/6 desktop/mobile scenarios; Browserbase unavailable
+- Human focus: subjective clarity, trust, visual quality, real-device behavior, and final acceptance—not repetition of deterministic checks
 - Human owner: product owner
 - Overall status: pending
 

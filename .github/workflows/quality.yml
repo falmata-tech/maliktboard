@@ -30,6 +30,10 @@ jobs:
         run: npm run typecheck
       - name: Test
         run: npm test
+      - name: Install Chromium for browser tests
+        run: npx playwright install --with-deps chromium
+      - name: Test critical browser journeys
+        run: npm run test:e2e
       - name: Build production application
         run: npm run build
       - name: Report high-severity dependency findings

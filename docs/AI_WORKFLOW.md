@@ -7,11 +7,11 @@ observe -> specify -> challenge -> accept -> test-first -> implement
         -> verify -> human acceptance -> release -> observe
 ```
 
-The AI may draft, analyze, implement, and verify. It may not approve its own requirements, architecture exceptions, risk waivers, browser acceptance, destructive migrations, or production rollout.
+The AI may draft, analyze, implement, and verify. It may not approve its own requirements, architecture exceptions, risk waivers, human browser acceptance, destructive migrations, or production rollout. The agent owns deterministic local browser automation and, when connected, Browserbase execution before requesting focused human usability review.
 
 ## Required agent check-ins
 
-Before code, report the active spec IDs, risk tier, scope/non-goals, open decisions, and planned checks. During work, report discovered scope pressure instead of absorbing it. At completion, report changed behavior, evidence, remaining risks, and rollback—not merely files touched.
+Before code, report the active spec IDs, risk tier, scope/non-goals, open decisions, and planned checks. During work, report discovered scope pressure instead of absorbing it. At completion, report changed behavior, evidence, remaining risks, and rollback—not merely files touched. Do not ask the product owner to repeat deterministic browser checks already covered by agent evidence.
 
 ## Anti-drift checks
 

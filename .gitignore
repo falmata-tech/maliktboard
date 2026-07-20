@@ -4,6 +4,8 @@ apps/*/.next/
 dist/
 build/
 coverage/
+playwright-report/
+test-results/
 *.tsbuildinfo
 
 .env
