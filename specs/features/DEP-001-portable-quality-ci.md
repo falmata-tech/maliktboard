@@ -1,7 +1,7 @@
 ---
 id: DEP-001
 title: Portable pull-request quality gate
-status: proposed
+status: accepted
 owner: product-owner
 risk: tier-2
 source: MP-05, MP-46, MP-49
@@ -61,7 +61,7 @@ Use a pinned Node major compatible with `package.json`, `npm ci`, read-only defa
 
 ## Approval
 
-- Product acceptance: pending
+- Product acceptance: accepted by product owner on 2026-07-20
 - Architecture/security acceptance: pending
-- Deployment acceptance: pending
+- Deployment acceptance: accepted for implementation on 2026-07-20
 - Waivers: none

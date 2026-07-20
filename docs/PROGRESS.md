@@ -14,11 +14,11 @@ Phase 0: establish spec-driven control before product repair or feature work.
 
 ## In progress
 
+- [ ] Implement accepted portable quality CI (`DEP-001`)
 - [ ] Codespaces proxy repair awaiting human browser acceptance (`DEP-002`)
 
 ## Next, in order
 
-- [ ] Accept or reject proposed DEP-001 portable quality CI
 - [ ] Human browser baseline and defect capture
 - [ ] Master-prompt compliance matrix
 - [ ] Human decision on ADR-001
