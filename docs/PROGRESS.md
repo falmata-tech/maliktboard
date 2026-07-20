@@ -17,6 +17,7 @@ Phase 0: establish spec-driven control before product repair or feature work.
 
 - [ ] Verify portable quality CI on GitHub and enable required checks (`DEP-001`; local gate passed)
 - [ ] Codespaces proxy repair awaiting human browser acceptance (`DEP-002`)
+- [ ] Human browser baseline run `BA-2026-07-20-01`
 
 ## Next, in order
 

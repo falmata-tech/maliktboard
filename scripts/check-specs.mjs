@@ -8,7 +8,7 @@ const required = [
   "docs/OFFLINE_SYNC.md", "docs/IMPLEMENTATION_PLAN.md", "docs/QA_CHECKLIST.md",
   "docs/DEPLOYMENT.md", "docs/DECISIONS.md", "docs/PROGRESS.md",
   "docs/TRACEABILITY.md", "docs/CHANGE_CONTROL.md", "docs/AI_WORKFLOW.md",
-  "docs/MASTER_PROMPT_COMPLIANCE.md", "specs/base/FE_BASE.md",
+  "docs/MASTER_PROMPT_COMPLIANCE.md", "docs/BROWSER_ACCEPTANCE.md", "specs/base/FE_BASE.md",
   "specs/base/BE_BASE.md", "specs/base/DEP_BASE.md",
   "specs/templates/FEATURE_SPEC_TEMPLATE.md", "AGENTS.md", "CONTRIBUTING.md",
 ];
