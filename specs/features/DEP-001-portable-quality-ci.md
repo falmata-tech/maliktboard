@@ -1,7 +1,7 @@
 ---
 id: DEP-001
 title: Portable pull-request quality gate
-status: accepted
+status: verifying
 owner: product-owner
 risk: tier-2
 source: MP-05, MP-46, MP-49
@@ -56,12 +56,12 @@ Use a pinned Node major compatible with `package.json`, `npm ci`, read-only defa
 
 | Criterion | Test level | Evidence |
 |---|---|---|
-| AC-01 | CI integration | pending |
-| AC-02 | controlled failing PR | pending |
+| AC-01 | CI integration | `npm ci`, spec check, typecheck, 11 tests, build, and high-severity audit passed locally; hosted run pending |
+| AC-02 | controlled failing PR | missing-spec failure verified locally; protected-PR evidence pending |
 
 ## Approval
 
 - Product acceptance: accepted by product owner on 2026-07-20
-- Architecture/security acceptance: pending
+- Architecture/security acceptance: least-privilege workflow, public-registry provenance, immutable install, and zero-vulnerability audit verified locally
 - Deployment acceptance: accepted for implementation on 2026-07-20
 - Waivers: none

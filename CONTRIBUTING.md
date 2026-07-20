@@ -9,6 +9,11 @@
 5. Open a PR using the repository template. Required checks and human review must pass.
 6. Prefer squash merge for one coherent change; retain ADR/migration commits when their history is operationally valuable.
 
-Direct pushes to `main`, self-approval, skipped checks, secret commits, generated database/uploads, and unrelated refactors are prohibited. Configure GitHub branch protection to require pull requests, one human approval, conversation resolution, current branch, spec guard, tests, typecheck, build, and security/dependency checks.
+Direct pushes to `main`, self-approval, skipped checks, secret commits, generated database/uploads, and unrelated refactors are prohibited. Configure GitHub branch protection to require pull requests, one human approval, conversation resolution, current branch, and these status checks:
+
+- `Spec guard / validate-spec-system`
+- `Quality / verify`
+
+Disable force pushes and branch deletion on `main`. Require review after the latest push and apply the rules to administrators. GitHub repository settings remain a human-owned external control; repository files cannot enforce them by themselves.
 
 Emergency changes still need an incident ID, smallest possible patch, rollback plan, approval, and a retrospective spec within one business day.

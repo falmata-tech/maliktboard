@@ -6,7 +6,7 @@ This is the single index from intent to evidence. Feature rows are added before 
 |---|---|---|---|---|---|---|---|---|
 | Baseline MVP | MP-01..MP-50 | TBD | TBD | TBD | ADR-001 | Existing repository | Existing tests are partial | audit-needed |
 | Spec workflow | User request, SpecDevs guide | N/A | N/A | N/A | N/A | `AGENTS.md`, `scripts/check-specs.mjs`, `.github/workflows/spec-guard.yml` | `npm run spec:check`; human accepted 2026-07-20 | done |
-| Portable PR quality gate | MP-05, MP-46, MP-49 | N/A | N/A | DEP-001 | N/A | Not implemented | Pending | accepted |
+| Portable PR quality gate | MP-05, MP-46, MP-49 | N/A | N/A | DEP-001 | N/A | `.github/workflows/quality.yml`, portable `package-lock.json` | Local immutable install/full gate and negative spec check passed; hosted run pending | verifying |
 | Codespaces Server Actions compatibility | Defect report 2026-07-20 | N/A | N/A | DEP-002 | N/A | `apps/web/next.config.ts` | Proxy HTTP 303, tests/typecheck/build; browser retest pending | human-acceptance |
 
 Allowed statuses: `proposed`, `clarified`, `ready`, `accepted`, `implementing`, `verifying`, `human-acceptance`, `done`, `blocked`, `deferred`.
