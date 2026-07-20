@@ -11,6 +11,6 @@ This is the single index from intent to evidence. Feature rows are added before 
 | Agent-owned browser testing | Product-owner instruction 2026-07-20 | FE_BASE | N/A | DEP-003 | N/A | `playwright.config.ts`, `apps/web/e2e`, CI quality workflow | 6/6 local desktop/mobile scenarios passed; Browserbase blocked/unavailable; hosted run pending | verifying |
 | Authorization and tenant boundary verification | MP-06, MP-07, MP-13, MP-35, MP-47, MP-49; product-owner instruction | N/A | BE-001 | DEP-001, DEP-003 | ADR-001 | `apps/web/tests/security-boundaries.test.ts`, centralized service/evidence guards | 8/8 focused security scenarios and 20/20 total tests pass; 5/5 live-browser subset passes | human-acceptance |
 | Application-service authorization enforcement | BE-001 finding; architecture contract | N/A | BE-002 | DEP-001, DEP-003 | ADR-001 | `apps/web/lib/services.ts`, evidence API route, admin page | Direct insufficient/fabricated role, tenant/scope/evidence/token, full build and browser regression pass | human-acceptance |
-| Server Action upload-form warning | DEP-003 browser evidence | FE-001 | N/A | N/A | N/A | Not implemented | Warning reproduced in local Chromium run | proposed |
+| Server Action upload-form warning | DEP-003 browser evidence | FE-001 | N/A | N/A | N/A | Not implemented | Warning reproduced; attribute-only repair accepted | accepted |
 
 Allowed statuses: `proposed`, `clarified`, `ready`, `accepted`, `implementing`, `verifying`, `human-acceptance`, `done`, `blocked`, `deferred`.

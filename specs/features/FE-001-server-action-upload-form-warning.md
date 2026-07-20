@@ -1,7 +1,7 @@
 ---
 id: FE-001
 title: Remove redundant Server Action upload-form encoding attributes
-status: proposed
+status: accepted
 owner: product-owner
 risk: tier-1
 source: DEP-003 local browser evidence 2026-07-20
@@ -51,7 +51,7 @@ Remove only redundant form attributes. Preserve action functions, field names, a
 
 ## Approval
 
-- Product acceptance: pending
-- Architecture/security acceptance: pending
+- Product acceptance: explicitly approved by product owner on 2026-07-20
+- Architecture/security acceptance: attribute-only repair; existing Server Action, authorization, and upload controls remain unchanged
 - Deployment acceptance: N/A
 - Waivers: none
