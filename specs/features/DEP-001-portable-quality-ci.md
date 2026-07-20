@@ -56,8 +56,8 @@ Use a pinned Node major compatible with `package.json`, `npm ci`, read-only defa
 
 | Criterion | Test level | Evidence |
 |---|---|---|
-| AC-01 | CI integration | `npm ci`, spec check, typecheck, 11 tests, build, and high-severity audit passed locally; hosted run pending |
-| AC-02 | controlled failing PR | missing-spec failure verified locally; protected-PR evidence pending |
+| AC-01 | CI integration | PR #1: hosted `validate-spec-system` passed in 8s and `verify` passed in 1m23s; immutable install, spec check, typecheck, 20 tests, Chromium, build, and audit covered |
+| AC-02 | controlled failing PR | missing-spec failure verified locally; GitHub reports `main` is not protected, so required-check enforcement remains pending |
 
 ## Approval
 

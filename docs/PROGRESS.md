@@ -17,7 +17,7 @@ Phase 0: establish spec-driven control before product repair or feature work.
 
 - [ ] Human acceptance for Server Action upload warning repair (`FE-001`; automated gates and 6/6 isolated browser suite pass)
 - [ ] Human acceptance for authorization and tenant security boundaries (`BE-001`; automated gates pass)
-- [ ] Verify portable quality CI on GitHub and enable required checks (`DEP-001`; local gate passed)
+- [ ] Enable required checks on `main` (`DEP-001`; PR #1 hosted spec and quality workflows pass; branch is currently unprotected)
 - [ ] Codespaces proxy repair awaiting human browser acceptance (`DEP-002`)
 - [ ] Human browser baseline run `BA-2026-07-20-01`
 - [ ] Verify agent-owned browser suite in hosted CI/Browserbase (`DEP-003`; 6/6 local passed, Browserbase unavailable)
